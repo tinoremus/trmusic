@@ -1,11 +1,13 @@
 from dataclasses import dataclass
 from guitar.guitarstring import GuitarString
-from guitar.notes import Note
-from guitar.chord import Chord
+from theory.scales import Note, NoteNames, OctavesScientific, Interval, Scale
+from theory.chord import Chord
+from typing import List
 
 
 @dataclass()
 class FretBoard6String:
+    name: str
     string1: GuitarString
     string2: GuitarString
     string3: GuitarString
@@ -14,62 +16,73 @@ class FretBoard6String:
     string6: GuitarString
     frets: int
 
-    def print(self, cmd_output=True):
-        fret_board = list()
-        fret_board.append('   ===========================')
-        for f in range(self.frets + 1):
-            line = '{:>2} | {:3} {:3} {:3} {:3} {:3} {:3} |'.format(
-                f,
-                self.string1.note_at_fret(f).name,
-                self.string2.note_at_fret(f).name,
-                self.string3.note_at_fret(f).name,
-                self.string4.note_at_fret(f).name,
-                self.string5.note_at_fret(f).name,
-                self.string6.note_at_fret(f).name,
-            )
-            fret_board.append(line)
-            # fret_board.append('   |  |   |   |   |   |   |  |')
+    @property
+    def intervals(self) -> List[Interval]:
+        return (self.frets + 1) * [Interval.HALF]
 
+    @property
+    def layout(self) -> List[str]:
+        s1 = Scale(name='Sting 1', root=self.string1.root, steps=self.intervals, degrees=None)
+        s2 = Scale(name='Sting 2', root=self.string2.root, steps=self.intervals, degrees=None)
+        s3 = Scale(name='Sting 3', root=self.string3.root, steps=self.intervals, degrees=None)
+        s4 = Scale(name='Sting 4', root=self.string4.root, steps=self.intervals, degrees=None)
+        s5 = Scale(name='Sting 5', root=self.string5.root, steps=self.intervals, degrees=None)
+        s6 = Scale(name='Sting 6', root=self.string6.root, steps=self.intervals, degrees=None)
+
+        layout = list()
+        for f, n1, n2, n3, n4, n5, n6 in (
+                zip(range(self.frets + 1), s1.notes, s2.notes, s3.notes, s4.notes, s5.notes, s6.notes)):
+            line = '{:>3}    {:<2}  {:<2}  {:<2}  {:<2}  {:<2}  {:<2}  '.format(
+                f,
+                n1.name.value.short,
+                n2.name.value.short,
+                n3.name.value.short,
+                n4.name.value.short,
+                n5.name.value.short,
+                n6.name.value.short)
+            layout.append(line)
+            if f == 0:
+                layout.append('       ' + '=' * 22)
+            else:
+                layout.append('       |   |   |   |   |   |   ')
+        return layout
+
+    def show_layout(self, cmd_output: True, chord: Chord or None = None):
         if cmd_output:
-            for line in fret_board:
+            for line in self.layout:
                 print(line)
         else:
-            return fret_board
+            return self.layout
 
-    def print_chord(self, chord: Chord, cmd_output=True):
-        fret_board = list()
-        fret_board.append('Chord: {}'.format(chord))
-        fret_board.append('   ===========================')
-        for f in range(self.frets + 1):
-            line = '{:>2} | {:3} {:3} {:3} {:3} {:3} {:3} |'.format(
-                f,
-                self.string1.note_at_fret(f).name if self.string1.note_at_fret(f) in chord.notes else '',
-                self.string2.note_at_fret(f).name if self.string2.note_at_fret(f) in chord.notes else '',
-                self.string3.note_at_fret(f).name if self.string3.note_at_fret(f) in chord.notes else '',
-                self.string4.note_at_fret(f).name if self.string4.note_at_fret(f) in chord.notes else '',
-                self.string5.note_at_fret(f).name if self.string5.note_at_fret(f) in chord.notes else '',
-                self.string6.note_at_fret(f).name if self.string6.note_at_fret(f) in chord.notes else '',
-            )
-            fret_board.append(line)
-            # fret_board.append('   |  |   |   |   |   |   |  |')
+    def show(self, cmd_output: True):
+        print_string = '{:20}: {}'
+
+        info = list()
+        info.append(print_string.format('Name', self.name))
+        info.append(print_string.format('Frets', self.frets))
+        info.append('')
 
         if cmd_output:
-            for line in fret_board:
+            for line in info:
                 print(line)
         else:
-            return fret_board
+            return info
 
 
 if __name__ == '__main__':
     fb16 = FretBoard6String(
-        string1=GuitarString(root=Note.E),
-        string2=GuitarString(root=Note.A),
-        string3=GuitarString(root=Note.D),
-        string4=GuitarString(root=Note.G),
-        string5=GuitarString(root=Note.B),
-        string6=GuitarString(root=Note.E),
-        frets=12
+        name='6 String Std. Fretboard 16 frets',
+        string1=GuitarString(root=Note(name=NoteNames.E, octave=OctavesScientific.FOUR, degree=None)),
+        string2=GuitarString(root=Note(name=NoteNames.A, octave=OctavesScientific.FOUR, degree=None)),
+        string3=GuitarString(root=Note(name=NoteNames.D, octave=OctavesScientific.FOUR, degree=None)),
+        string4=GuitarString(root=Note(name=NoteNames.G, octave=OctavesScientific.FOUR, degree=None)),
+        string5=GuitarString(root=Note(name=NoteNames.B, octave=OctavesScientific.FOUR, degree=None)),
+        string6=GuitarString(root=Note(name=NoteNames.E, octave=OctavesScientific.FOUR, degree=None)),
+        frets=16
     )
-    test_chord = Chord(name='Test', notes=[Note.E, Note.A, Note.G])
-    c_major = Chord(name='C Major')
-    fb16.print_chord(chord=c_major)
+    fb16.show(True)
+    lo = fb16.layout
+    test_chord = Chord(name='C Major')
+    fb16.show_layout(True, chord=test_chord)
+    # c_major = Chord(name='C Major')
+    # fb16.print_chord(chord=c_major)

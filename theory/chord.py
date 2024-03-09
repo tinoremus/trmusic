@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from guitar.notes import Note
+from theory.scales import Note, NoteNames, OctavesScientific
 from typing import List
 from enum import Enum
 
@@ -19,4 +19,8 @@ class Chord:
             return
         if self.name.lower() == 'C Major'.lower():
             if self.version == ChordVersion.STANDARD:
-                self.notes = [Note.C, Note.E, Note.G]
+                self.notes = [
+                    Note(name=NoteNames.C, degree=None, octave=OctavesScientific.FOUR),
+                    Note(name=NoteNames.E, degree=None, octave=OctavesScientific.FOUR),
+                    Note(name=NoteNames.G, degree=None, octave=OctavesScientific.FOUR),
+                ]
