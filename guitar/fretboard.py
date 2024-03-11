@@ -8,51 +8,42 @@ from typing import List
 @dataclass()
 class FretBoard6String:
     name: str
-    string1: GuitarString
-    string2: GuitarString
-    string3: GuitarString
-    string4: GuitarString
-    string5: GuitarString
-    string6: GuitarString
+    strings: List[GuitarString]
     frets: int
 
     @property
     def intervals(self) -> List[Interval]:
-        return (self.frets + 1) * [Interval.HALF]
+        return self.frets * [Interval.HALF]
 
-    @property
-    def layout(self) -> List[str]:
-        s1 = Scale(name='Sting 1', root=self.string1.root, steps=self.intervals, degrees=None)
-        s2 = Scale(name='Sting 2', root=self.string2.root, steps=self.intervals, degrees=None)
-        s3 = Scale(name='Sting 3', root=self.string3.root, steps=self.intervals, degrees=None)
-        s4 = Scale(name='Sting 4', root=self.string4.root, steps=self.intervals, degrees=None)
-        s5 = Scale(name='Sting 5', root=self.string5.root, steps=self.intervals, degrees=None)
-        s6 = Scale(name='Sting 6', root=self.string6.root, steps=self.intervals, degrees=None)
+    def __post_init__(self):
+        for string in self.strings:
+            string.intervals = self.intervals
 
-        layout = list()
-        for f, n1, n2, n3, n4, n5, n6 in (
-                zip(range(self.frets + 1), s1.notes, s2.notes, s3.notes, s4.notes, s5.notes, s6.notes)):
-            line = '{:>3}    {:<2}  {:<2}  {:<2}  {:<2}  {:<2}  {:<2}  '.format(
-                f,
-                n1.name.value.short,
-                n2.name.value.short,
-                n3.name.value.short,
-                n4.name.value.short,
-                n5.name.value.short,
-                n6.name.value.short)
-            layout.append(line)
-            if f == 0:
-                layout.append('       ' + '=' * 22)
+    def get_layout(self, note_filter: List[Note] or None = None) -> List[str]:
+        if not self.strings:
+            return []
+        layout = []
+        for string in self.strings[::-1]:
+            if note_filter is None:
+                names = [note.name.value.short for note in string.notes]
             else:
-                layout.append('       |   |   |   |   |   |   ')
+                names = [note.name.value.short if note.name in [n.name for n in note_filter]
+                         else '' for note in string.notes]
+            layout.append('| '.join(['{:3}'.format(name) for name in names]))
+
+        layout.insert(0, '-' * len(layout[0]))
+        layout.insert(0, '| '.join(['{:<3}'.format(f) for f in range(self.frets + 1)]))
+        layout.append('-' * len(layout[1]))
+
         return layout
 
     def show_layout(self, cmd_output: True, chord: Chord or None = None):
+        layout = self.get_layout(note_filter=chord.notes if chord is not None else None)
         if cmd_output:
-            for line in self.layout:
+            for line in layout:
                 print(line)
         else:
-            return self.layout
+            return layout
 
     def show(self, cmd_output: True):
         print_string = '{:20}: {}'
@@ -72,16 +63,17 @@ class FretBoard6String:
 if __name__ == '__main__':
     fb16 = FretBoard6String(
         name='6 String Std. Fretboard 16 frets',
-        string1=GuitarString(root=Note(name=NoteNames.E, octave=OctavesScientific.FOUR, degree=None)),
-        string2=GuitarString(root=Note(name=NoteNames.A, octave=OctavesScientific.FOUR, degree=None)),
-        string3=GuitarString(root=Note(name=NoteNames.D, octave=OctavesScientific.FOUR, degree=None)),
-        string4=GuitarString(root=Note(name=NoteNames.G, octave=OctavesScientific.FOUR, degree=None)),
-        string5=GuitarString(root=Note(name=NoteNames.B, octave=OctavesScientific.FOUR, degree=None)),
-        string6=GuitarString(root=Note(name=NoteNames.E, octave=OctavesScientific.FOUR, degree=None)),
+        strings=[
+            GuitarString(root=Note(name=NoteNames.E, octave=OctavesScientific.FOUR, degree=None)),
+            GuitarString(root=Note(name=NoteNames.A, octave=OctavesScientific.FOUR, degree=None)),
+            GuitarString(root=Note(name=NoteNames.D, octave=OctavesScientific.FOUR, degree=None)),
+            GuitarString(root=Note(name=NoteNames.G, octave=OctavesScientific.FOUR, degree=None)),
+            GuitarString(root=Note(name=NoteNames.B, octave=OctavesScientific.FOUR, degree=None)),
+            GuitarString(root=Note(name=NoteNames.E, octave=OctavesScientific.FOUR, degree=None)),
+        ],
         frets=16
     )
     fb16.show(True)
-    lo = fb16.layout
     test_chord = Chord(name='C Major')
     fb16.show_layout(True, chord=test_chord)
     # c_major = Chord(name='C Major')
