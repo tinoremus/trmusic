@@ -30,11 +30,9 @@ class FretBoard6String:
                 names = [note.name.value.short if note.name in [n.name for n in note_filter]
                          else '' for note in string.notes]
             layout.append('| '.join(['{:3}'.format(name) for name in names]))
-
         layout.insert(0, '-' * len(layout[0]))
         layout.insert(0, '| '.join(['{:<3}'.format(f) for f in range(self.frets + 1)]))
         layout.append('-' * len(layout[1]))
-
         return layout
 
     def show_layout(self, cmd_output: True, chord: Chord or None = None):
